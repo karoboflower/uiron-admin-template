@@ -1,0 +1,45 @@
+{
+  "name": "@uiron/admin-template",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "turbo run test --parallel",
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build --parallel",
+    "clean": "rimraf node_modules && rimraf packages/*/node_modules",
+    "vue": "turbo run dev --filter=@uiron/*"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.8.1",
+  "workspaces": [
+    "packages/*",
+    "packages/vue/*"
+  ],
+  "devDependencies": {
+    "@types/node": "catalog:types",
+    "@antfu/eslint-config": "catalog:dev",
+    "eslint": "catalog:dev",
+    "eslint-plugin-format": "catalog:dev",
+    "lint-staged": "catalog:dev",
+    "prettier": "catalog:dev",
+    "typescript": "catalog:dev",
+    "husky": "catalog:dev",
+    "@commitlint/cli": "catalog:dev",
+    "rollup": "catalog:dev",
+    "rollup-plugin-dts": "catalog:dev",
+    "rollup-plugin-esbuild": "catalog:dev",
+    "rollup-plugin-pure": "catalog:dev",
+    "@rollup/plugin-json": "catalog:dev",
+    "@rollup/plugin-replace": "catalog:dev",
+    "tinyglobby": "catalog:dev"
+  },
+  "dependencies": {
+    "vue": "catalog:peer"
+  },
+  "resolutions": {
+    "rollup": "catalog:dev"
+  }
+}

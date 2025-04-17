@@ -1,0 +1,24 @@
+{
+  "name": "@uiron/utils",
+  "version": "0.0.1",
+  "description": "",
+  "exports": {
+    ".": "./index.mjs",
+    "./*": "./*"
+  },
+  "main": "./index.mjs",
+  "module": "./index.mjs",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.8.1",
+  "scripts": {
+    "build": "rollup --config=rollup.config.ts --configPlugin=rollup-plugin-esbuild",
+    "prepack": "pnpm run build",
+    "test:attw": "attw --pack --config-path ../../.attw.json ."
+  },
+  "peerDependencies": {
+    "vue": "catalog:peer",
+    "axios": "catalog:peer"
+  }
+}
