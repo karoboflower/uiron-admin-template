@@ -1,6 +1,6 @@
 {
   "name": "@uiron/hooks",
-  "version": "0.0.3-beta.1",
+  "version": "0.0.3-beta.2",
   "homepage": "https://github.com/karoboflower/uiron-admin",
   "publishConfig": {
     "access": "public",
@@ -29,7 +29,8 @@
     "release": "bumpp"
   },
   "peerDependencies": {
-    "axios": "catalog:peer"
+    "axios": "catalog:peer",
+    "element-plus": "catalog:peer"
   },
   "devDependencies": {
     "bumpp": "^10.0.3"
