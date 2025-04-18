@@ -39,79 +39,138 @@ interface Result<T = any> {
  * Data processing class, can be configured according to the project
  */
 
+/**
+ * Extended Axios configuration options
+ */
 interface CreateAxiosOptions extends AxiosRequestConfig {
+    /**
+     * Authentication scheme (e.g., 'Bearer')
+     */
     authenticationScheme?: string;
+    /**
+     * Request transformation hooks
+     */
     transform?: AxiosTransform;
+    /**
+     * Request options
+     */
     requestOptions?: RequestOptions;
 }
+/**
+ * Abstract class for Axios transformations
+ * Provides hooks for request/response processing
+ */
 declare abstract class AxiosTransform {
     /**
-     * @description: Process configuration before request
-     * @description: Process configuration before request
+     * Process configuration before request
+     * @param config Axios request configuration
+     * @param options Request options
      */
     beforeRequestHook?: (config: AxiosRequestConfig, options: RequestOptions) => AxiosRequestConfig;
     /**
-     * @description: Request successfully processed
+     * Process request response data
+     * @param res Axios response
+     * @param options Request options
      */
-    transformRequestHook?: (res: AxiosResponse<Result>, options: RequestOptions) => any;
+    transformRequestHook?: <T = any>(res: AxiosResponse<Result>, options: RequestOptions) => T;
     /**
-     * @description: 请求失败处理
+     * Handle request errors
+     * @param e Error object
+     * @param options Request options
      */
     requestCatchHook?: (e: Error, options: RequestOptions) => Promise<any>;
     /**
-     * @description: 请求之前的拦截器
+     * Request interceptor
+     * @param config Axios request configuration
+     * @param options Axios creation options
      */
     requestInterceptors?: (config: AxiosRequestConfig, options: CreateAxiosOptions) => AxiosRequestConfig;
     /**
-     * @description: 请求之后的拦截器
+     * Response interceptor
+     * @param res Axios response
      */
-    responseInterceptors?: (res: AxiosResponse<any>) => AxiosResponse<any>;
+    responseInterceptors?: <T = any>(res: AxiosResponse<T>) => AxiosResponse<T>;
     /**
-     * @description: 请求之前的拦截器错误处理
+     * Request interceptor error handler
+     * @param error Error object
      */
     requestInterceptorsCatch?: (error: Error) => void;
     /**
-     * @description: 请求之后的拦截器错误处理
+     * Response interceptor error handler
+     * @param error Error object
      */
     responseInterceptorsCatch?: (error: Error) => void;
 }
 
 /**
- * @description:  axios module
+ * Enhanced Axios client with additional functionality
  */
 declare class VAxios {
+    /**
+     * Axios instance
+     */
     private axiosInstance;
+    /**
+     * Configuration options
+     */
     private readonly options;
+    /**
+     * Request cancellation manager
+     */
+    private readonly axiosCanceler;
     constructor(options: CreateAxiosOptions);
     /**
-     * @description:  Create axios instance
+     * Create a new axios instance with updated config
      */
     private createAxios;
+    /**
+     * Get transformation hooks from options
+     */
     private getTransform;
+    /**
+     * Get the underlying axios instance
+     */
     getAxios(): AxiosInstance;
     /**
-     * @description: Reconfigure axios
+     * Reconfigure the axios instance
      */
     configAxios(config: CreateAxiosOptions): void;
     /**
-     * @description: Set general header
+     * Set default headers for all requests
      */
-    setHeader(headers: any): void;
+    setHeader(headers: Record<string, string>): void;
     /**
-     * @description: Interceptor configuration
+     * Set up request/response interceptors
      */
     private setupInterceptors;
-    /**
-     * @description:  File Upload
-     */
     supportFormData(config: AxiosRequestConfig): any;
+    /**
+     * GET request
+     */
     get<T = any>(config: AxiosRequestConfig, options?: RequestOptions): Promise<T>;
+    /**
+     * POST request
+     */
     post<T = any>(config: AxiosRequestConfig, options?: RequestOptions): Promise<T>;
+    /**
+     * PUT request
+     */
     put<T = any>(config: AxiosRequestConfig, options?: RequestOptions): Promise<T>;
+    /**
+     * DELETE request
+     */
     delete<T = any>(config: AxiosRequestConfig, options?: RequestOptions): Promise<T>;
+    /**
+     * Generic request method
+     */
     request<T = any>(config: AxiosRequestConfig, options?: RequestOptions): Promise<T>;
 }
 
-declare function export_default(opt?: Partial<CreateAxiosOptions>): VAxios;
+/**
+ * Create an axios instance with custom configuration
+ * @param opt Additional axios options to override defaults
+ * @returns VAxios instance
+ */
+declare function createAxios(opt?: Partial<CreateAxiosOptions>): VAxios;
 
-export { export_default as uironRequest };
+export { createAxios as uironRequest };

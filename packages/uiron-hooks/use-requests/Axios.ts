@@ -5,7 +5,7 @@ import { ContentTypeEnum, RequestEnum } from '../constants';
 import { isFunction, deepMerge } from './utils';
 import axios from 'axios';
 import { AxiosCanceler } from './axiosCancel';
-
+import { qs } from 'qs';
 export * from './axiosTransform';
 
 /**
@@ -94,9 +94,6 @@ export class VAxios {
     // Request interceptor configuration processing
     this.axiosInstance.interceptors.request.use((config: AxiosRequestConfig) => {
       // If cancel repeat request is turned on, then cancel repeat request is prohibited
-      const {
-        headers: { ignoreCancelToken },
-      } = config;
         if (requestInterceptors && isFunction(requestInterceptors)) {
           config = requestInterceptors(config, this.options);
         }
@@ -116,7 +113,6 @@ export class VAxios {
         }
         return res;
     }, undefined);
-
     // Response result interceptor error capture
     responseInterceptorsCatch &&
       isFunction(responseInterceptorsCatch) &&

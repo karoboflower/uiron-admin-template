@@ -11,7 +11,7 @@ import axios from 'axios';
 import { VAxios } from './Axios';
 import { checkStatus } from './checkStatus';
 import { joinTimestamp } from './helper';
-import { dealWhiteList, deepMerge, isString } from './utils';
+import { dealWhiteList, deepMerge, isString, isFunction } from './utils';
 
 /**
  * @description: Data processing utilities for various request handling scenarios
@@ -48,7 +48,7 @@ const transform: AxiosTransform = {
    * @description: Process request configuration before making the request
    */
   beforeRequestHook: (config, options) => {
-    const { apiUrl, joinPrefix, urlPrefix, joinTime = true, joinParamsToUrl } = options;
+    const { apiUrl, joinPrefix, urlPrefix, joinTime = true } = options;
     
     // Handle URL prefixes
     if (joinPrefix && urlPrefix) {
@@ -75,9 +75,9 @@ const transform: AxiosTransform = {
    * @description: Request interceptor - handles authentication, tokens, app IDs
    */
   requestInterceptors: (config, options) => {
-    const {whiteList = [], setToken = '', appId } = options?.requestOptions || {};
+    const {whiteList = [], setToken , appId } = options?.requestOptions || {};
     // 处理白名单
-    if(!dealWhiteList(whiteList, config.url)) {
+    if(!dealWhiteList(whiteList, config.url) && setToken && isFunction(isFunction)) { 
       const config1 = setToken && setToken(config);
       return config1;
     }
@@ -100,7 +100,6 @@ const transform: AxiosTransform = {
    */
   responseInterceptorsCatch: (error: any) => {
     const { response, message } = error || {};
-  
     checkStatus(response, message);
     if (axios.isCancel(error)) {
       ElMessage.error('请求已取消');
@@ -148,12 +147,6 @@ export default function createAxios(opt?: Partial<CreateAxiosOptions>) {
           apiUrl: '',
           // 忽略重复请求
           ignoreCancelToken: true,
-        },
-        reponseOptions: {
-          catchError: true,
-          addError: () => {
-
-          }
         }
       },
       opt || {},

@@ -1,4 +1,4 @@
-(function (exports, elementPlus, axios) {
+(function (exports, elementPlus, axios, qs) {
     'use strict';
 
     /**
@@ -139,7 +139,7 @@
     }());
 
     /**
-     * @description:  axios module
+     * Enhanced Axios client with additional functionality
      */
     var VAxios = /** @class */ (function () {
         function VAxios(options) {
@@ -148,20 +148,26 @@
             this.setupInterceptors();
         }
         /**
-         * @description:  Create axios instance
+         * Create a new axios instance with updated config
          */
         VAxios.prototype.createAxios = function (config) {
             this.axiosInstance = axios.create(config);
         };
+        /**
+         * Get transformation hooks from options
+         */
         VAxios.prototype.getTransform = function () {
             var transform = this.options.transform;
             return transform;
         };
+        /**
+         * Get the underlying axios instance
+         */
         VAxios.prototype.getAxios = function () {
             return this.axiosInstance;
         };
         /**
-         * @description: Reconfigure axios
+         * Reconfigure the axios instance
          */
         VAxios.prototype.configAxios = function (config) {
             if (!this.axiosInstance) {
@@ -170,7 +176,7 @@
             this.createAxios(config);
         };
         /**
-         * @description: Set general header
+         * Set default headers for all requests
          */
         VAxios.prototype.setHeader = function (headers) {
             if (!this.axiosInstance) {
@@ -179,7 +185,7 @@
             Object.assign(this.axiosInstance.defaults.headers, headers);
         };
         /**
-         * @description: Interceptor configuration
+         * Set up request/response interceptors
          */
         VAxios.prototype.setupInterceptors = function () {
             var _this = this;
@@ -191,6 +197,7 @@
             var axiosCanceler = new AxiosCanceler();
             // Request interceptor configuration processing
             this.axiosInstance.interceptors.request.use(function (config) {
+                // If cancel repeat request is turned on, then cancel repeat request is prohibited
                 if (requestInterceptors && isFunction(requestInterceptors)) {
                     config = requestInterceptors(config, _this.options);
                 }
@@ -213,39 +220,6 @@
                 isFunction(responseInterceptorsCatch) &&
                 this.axiosInstance.interceptors.response.use(undefined, responseInterceptorsCatch);
         };
-        /**
-         * @description:  File Upload
-         */
-        // uploadFile<T = any>(config: AxiosRequestConfig, params: UploadFileParams) {
-        //   const formData = new window.FormData();
-        //   if (params.data) {
-        //     Object.keys(params.data).forEach((key) => {
-        //       if (!params.data) return;
-        //       const value = params.data[key];
-        //       if (Array.isArray(value)) {
-        //         value.forEach((item) => {
-        //           formData.append(`${key}[]`, item);
-        //         });
-        //         return;
-        //       }
-        //       formData.append(key, params.data[key]);
-        //     });
-        //   }
-        //   formData.append(params.name || 'file', params.file, params.filename);
-        //   const customParams = omit(params, 'file', 'filename', 'file');
-        //   Object.keys(customParams).forEach((key) => {
-        //     formData.append(key, customParams[key]);
-        //   });
-        //   return this.axiosInstance.request<T>({
-        //     ...config,
-        //     method: 'POST',
-        //     data: formData,
-        //     headers: {
-        //       'Content-type': ContentTypeEnum.FORM_DATA,
-        //       /* ignoreCancelToken: false, */
-        //     },
-        //   });
-        // }
         // support form-data
         VAxios.prototype.supportFormData = function (config) {
             var _a;
@@ -256,49 +230,72 @@
                 ((_a = config.method) === null || _a === void 0 ? void 0 : _a.toUpperCase()) === RequestEnum.GET) {
                 return config;
             }
-            return __assign(__assign({}, config), { data: __assign({}, config.data) });
+            // Could add form data serialization here if needed
+            return __assign(__assign({}, config), { data: qs.qs.stringify(config.data, { arrayFormat: 'brackets' }) });
         };
+        /**
+         * GET request
+         */
         VAxios.prototype.get = function (config, options) {
             return this.request(__assign(__assign({}, config), { method: 'GET' }), options);
         };
+        /**
+         * POST request
+         */
         VAxios.prototype.post = function (config, options) {
             return this.request(__assign(__assign({}, config), { method: 'POST' }), options);
         };
+        /**
+         * PUT request
+         */
         VAxios.prototype.put = function (config, options) {
             return this.request(__assign(__assign({}, config), { method: 'PUT' }), options);
         };
+        /**
+         * DELETE request
+         */
         VAxios.prototype.delete = function (config, options) {
             return this.request(__assign(__assign({}, config), { method: 'DELETE' }), options);
         };
+        /**
+         * Generic request method
+         */
         VAxios.prototype.request = function (config, options) {
             var _this = this;
+            // Merge configuration with options
             var conf = deepMerge(config);
             var transform = this.getTransform();
             var requestOptions = this.options.requestOptions;
             var opt = Object.assign({}, requestOptions, options);
+            // Apply pre-request hook
             var _a = transform || {}, beforeRequestHook = _a.beforeRequestHook, requestCatchHook = _a.requestCatchHook, transformRequestHook = _a.transformRequestHook;
             if (beforeRequestHook && isFunction(beforeRequestHook)) {
                 conf = beforeRequestHook(conf, opt);
             }
+            // Store options for interceptors to access
             conf.requestOptions = opt;
+            // Handle form data if needed
             conf = this.supportFormData(conf);
+            // Execute the request
             return new Promise(function (resolve, reject) {
                 _this.axiosInstance
                     .request(conf)
                     .then(function (res) {
+                    // Transform response data
                     if (transformRequestHook && isFunction(transformRequestHook)) {
                         try {
                             var ret = transformRequestHook(res, opt);
                             resolve(ret);
                         }
                         catch (err) {
-                            reject(err || new Error('request error!'));
+                            reject(err || new Error('Request data processing error'));
                         }
                         return;
                     }
                     resolve(res);
                 })
                     .catch(function (e) {
+                    // Custom error handling
                     if (requestCatchHook && isFunction(requestCatchHook)) {
                         reject(requestCatchHook(e, opt));
                         return;
@@ -316,96 +313,34 @@
      * @param {number} response
      * @return void
      */
+    /**
+     * Default error messages for HTTP status codes
+     */
+    var defaultErrorMessages = {
+        400: '请求参数错误',
+        401: '用户未授权或授权已过期',
+        403: '访问被禁止',
+        404: '请求的资源不存在',
+        405: '请求方法不允许',
+        408: '请求超时',
+        500: '服务器内部错误',
+        501: '服务未实现',
+        502: '网关错误',
+        503: '服务不可用',
+        504: '网关超时',
+        505: 'HTTP版本不支持'
+    };
     function checkStatus(response, message) {
-        var _a, _b;
+        var _a;
         if (!response)
             return;
-        console.log('错误响应response: ', response);
-        console.log('错误信息message: ', message);
-        // 超时报错
-        // if (!response && message ) {
-        //   ElMessage.error('服务器响应超时');
-        // }
-        // 处理调用接口使用Blob 返回了json错误，无法解析
-        if (response.data instanceof Blob) {
-            if (response.headers['content-type'].includes('json')) {
-                var reader_1 = new FileReader();
-                reader_1.readAsText(response.data);
-                reader_1.onload = function () {
-                    var result = reader_1.result;
-                    var errorInfos = JSON.parse(result);
-                    var msg = errorInfos.msg;
-                    elementPlus.ElMessage.error("".concat(msg));
-                };
-            }
-            return;
-        }
-        // 返回状态码时
-        var _c = response.data, code = _c.code, msg = _c.msg;
-        if (code) {
-            switch ((_a = response.data) === null || _a === void 0 ? void 0 : _a.code) {
-                case 1701:
-                    elementPlus.ElMessage.error('串口通信超时');
-                    return;
-                case 1702:
-                    elementPlus.ElMessage.error('串口忙');
-                    return;
-                case 1703:
-                    elementPlus.ElMessage.error('串口请求数据错误');
-                    return;
-                case 1705:
-                    elementPlus.ElMessage.error('锁状态错误');
-                    return;
-                case 1706:
-                    elementPlus.ElMessage.error('mqtt消息过期');
-                    return;
-                case 1707:
-                    elementPlus.ElMessage.error('串口效验数据错误');
-                    return;
-                default:
-                    elementPlus.ElMessage.error("".concat(code, "  ").concat(msg));
-                    return;
-            }
-        }
-        console.log('错误响应response: ', response.data);
         // 后端自定义报错
-        if ((_b = response.data) === null || _b === void 0 ? void 0 : _b.msg) {
+        if ((_a = response.data) === null || _a === void 0 ? void 0 : _a.msg) {
             elementPlus.ElMessage.error(response.data.msg);
             return;
         }
-        // 根据状态码响应报错
-        switch (response.status) {
-            case 400:
-                elementPlus.ElMessage.error('400：请求错误');
-                break;
-            case 401:
-                elementPlus.ElMessage.error('token已失效,请重新登录');
-                window.location.reload();
-                break;
-            case 403:
-                elementPlus.ElMessage.error('当前账号无权限访问！');
-                break;
-            case 404:
-                elementPlus.ElMessage.error('你所访问的资源不存在！');
-                break;
-            case 405:
-                elementPlus.ElMessage.error('请求方式错误！请您稍后重试');
-                break;
-            case 408:
-                elementPlus.ElMessage.error('请求超时！请您稍后重试');
-                break;
-            case 500:
-                elementPlus.ElMessage.error('服务器异常！');
-                break;
-            case 502:
-                elementPlus.ElMessage.error('网关错误！');
-                break;
-            case 503:
-                elementPlus.ElMessage.error('服务不可用！');
-                break;
-            case 504:
-                elementPlus.ElMessage.error('网关超时！');
-                break;
+        if (defaultErrorMessages[response.status]) {
+            elementPlus.ElMessage.error(defaultErrorMessages[response.status]);
         }
     }
 
@@ -421,31 +356,44 @@
     // axios配置  可自行根据项目进行更改，只需更改该文件即可，其他文件可以不动
     // The axios configuration can be changed according to the project, just change the file, other files can be left unchanged
     /**
-     * @description: 数据处理，方便区分多种处理方式
+     * @description: Data processing utilities for various request handling scenarios
      */
     var transform = {
         /**
-         * @description: 处理请求数据。如果数据不是预期格式，可直接抛出错误
+         * @description: Process response data. If the data format is not as expected, it will throw an error
          */
         transformRequestHook: function (res, options) {
-            var isReturnNativeResponse = options.isReturnNativeResponse;
-            // 是否返回原生响应头 比如：需要获取响应头时使用该属性
+            var isReturnNativeResponse = options.isReturnNativeResponse, _a = options.isTransformResponse, isTransformResponse = _a === void 0 ? true : _a;
+            // Return native response if specified (e.g., when headers are needed)
             if (isReturnNativeResponse) {
                 return res;
             }
+            // Skip transformation if specified
+            if (!isTransformResponse) {
+                return res.data;
+            }
             var data = res.data;
+            // Handle null/undefined data
+            if (!data) {
+                return null;
+            }
+            // Support multiple response data structures
             return data.result || data.data || data;
         },
-        // 请求之前处理config
+        /**
+         * @description: Process request configuration before making the request
+         */
         beforeRequestHook: function (config, options) {
             var _a;
             var apiUrl = options.apiUrl, joinPrefix = options.joinPrefix, urlPrefix = options.urlPrefix, _b = options.joinTime, joinTime = _b === void 0 ? true : _b;
-            if (joinPrefix) {
+            // Handle URL prefixes
+            if (joinPrefix && urlPrefix) {
                 config.url = "".concat(urlPrefix).concat(config.url);
             }
             if (apiUrl && isString(apiUrl)) {
                 config.url = "".concat(apiUrl).concat(config.url);
             }
+            // Process parameters based on request method
             var params = config.params || config.data || {};
             // formatDate && data && !isString(data) && formatRequestDate(data);
             if (((_a = config.method) === null || _a === void 0 ? void 0 : _a.toUpperCase()) === RequestEnum.GET) {
@@ -456,12 +404,12 @@
             return config;
         },
         /**
-         * @description: 请求拦截器处理,添加请求token,appId等
+         * @description: Request interceptor - handles authentication, tokens, app IDs
          */
         requestInterceptors: function (config, options) {
-            var _a = (options === null || options === void 0 ? void 0 : options.requestOptions) || {}, _b = _a.whiteList, whiteList = _b === void 0 ? [] : _b, _c = _a.setToken, setToken = _c === void 0 ? '' : _c, appId = _a.appId;
+            var _a = (options === null || options === void 0 ? void 0 : options.requestOptions) || {}, _b = _a.whiteList, whiteList = _b === void 0 ? [] : _b, setToken = _a.setToken, appId = _a.appId;
             // 处理白名单
-            if (!dealWhiteList(whiteList, config.url)) {
+            if (!dealWhiteList(whiteList, config.url) && setToken && isFunction(isFunction)) {
                 var config1 = setToken && setToken(config);
                 return config1;
             }
@@ -471,46 +419,42 @@
             return config;
         },
         /**
-         * @description: 响应拦截器处理,响应成功的拦截处理
+         * @description: Response interceptor processing - handle successful responses
          */
         responseInterceptors: function (res) {
             return res;
         },
         /**
-         * @description: 响应错误处理
+         * @description: Response error handling - process error responses
          */
         responseInterceptorsCatch: function (error) {
-            var _a = error || {}, response = _a.response, message = _a.message;
-            checkStatus(response, message);
-            if (!response && error.message === 'timeout of 30000ms exceeded') {
-                elementPlus.ElMessage.error('服务器响应超时');
-            }
+            var _a = error || {}, response = _a.response; _a.message;
+            checkStatus(response);
             if (axios.isCancel(error)) {
                 elementPlus.ElMessage.error('请求已取消');
             }
             else if (!response) {
-                elementPlus.ElMessage.error(error.message);
+                return Promise.reject(new Error('Network error, please check your connection'));
             }
             return Promise.reject(error);
         },
     };
-    function index (opt) {
+    /**
+     * Create an axios instance with custom configuration
+     * @param opt Additional axios options to override defaults
+     * @returns VAxios instance
+     */
+    function createAxios(opt) {
         return new VAxios(deepMerge({
             // 接口超时时间，服务器超过下面时间没响应会报错
             timeout: 30 * 1000,
-            // 基础接口地址
-            // apiUrl: globSetting.apiUrl,
-            // 接口可能会有通用的地址部分，可以统一抽取出来
             headers: { 'Content-Type': ContentTypeEnum.JSON },
-            // 如果是form-data格式
-            // headers: { 'Content-Type': ContentTypeEnum.FORM_URLENCODED },
             // 数据处理方式
             transform: transform,
             // 配置项，下面的选项都可以在独立的接口请求中覆盖
             requestOptions: {
                 appId: '',
                 whiteList: [],
-                // 默认将prefix 添加到url
                 joinPrefix: true,
                 // 是否返回原生响应头 比如：需要获取响应头时使用该属性
                 isReturnNativeResponse: false,
@@ -520,7 +464,6 @@
                 joinParamsToUrl: false,
                 // 格式化提交参数时间
                 formatDate: true,
-                // 接口地址
                 //  是否加入时间戳
                 joinTime: false,
                 // 接口前缀
@@ -529,14 +472,10 @@
                 apiUrl: '',
                 // 忽略重复请求
                 ignoreCancelToken: true,
-                // 是否开启mock
-                mock: false
-            },
+            }
         }, opt || {}));
     }
-    // export const defHttp = createAxios();
-    // export const CancelToken = axios.CancelToken;
 
-    exports.uironRequest = index;
+    exports.uironRequest = createAxios;
 
-})(this.VueUse = this.VueUse || {}, elementPlus, axios);
+})(this.VueUse = this.VueUse || {}, elementPlus, axios, qs);
