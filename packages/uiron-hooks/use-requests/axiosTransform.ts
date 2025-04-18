@@ -2,50 +2,76 @@
  * Data processing class, can be configured according to the project
  */
 import type { AxiosRequestConfig, AxiosResponse } from 'axios';
-import type { RequestOptions, Result } from '../../../../types/axios';
+import type { RequestOptions, Result } from '../types/axios';
 
+/**
+ * Extended Axios configuration options
+ */
 export interface CreateAxiosOptions extends AxiosRequestConfig {
+  /**
+   * Authentication scheme (e.g., 'Bearer')
+   */
   authenticationScheme?: string;
-  urlPrefix?: string;
+  
+  /**
+   * Request transformation hooks
+   */
   transform?: AxiosTransform;
+  
+  /**
+   * Request options
+   */
   requestOptions?: RequestOptions;
-  appId?: string;
 }
 
+/**
+ * Abstract class for Axios transformations
+ * Provides hooks for request/response processing
+ */
 export abstract class AxiosTransform {
   /**
-   * @description: Process configuration before request
-   * @description: Process configuration before request
+   * Process configuration before request
+   * @param config Axios request configuration
+   * @param options Request options
    */
   beforeRequestHook?: (config: AxiosRequestConfig, options: RequestOptions) => AxiosRequestConfig;
 
   /**
-   * @description: Request successfully processed
+   * Process request response data
+   * @param res Axios response
+   * @param options Request options
    */
-  transformRequestHook?: (res: AxiosResponse<Result>, options: RequestOptions) => any;
+  transformRequestHook?: <T = any>(res: AxiosResponse<Result>, options: RequestOptions) => T;
 
   /**
-   * @description: 请求失败处理
+   * Handle request errors
+   * @param e Error object
+   * @param options Request options
    */
   requestCatchHook?: (e: Error, options: RequestOptions) => Promise<any>;
 
   /**
-   * @description: 请求之前的拦截器
+   * Request interceptor
+   * @param config Axios request configuration
+   * @param options Axios creation options
    */
   requestInterceptors?: (config: AxiosRequestConfig, options: CreateAxiosOptions) => AxiosRequestConfig;
 
   /**
-   * @description: 请求之后的拦截器
+   * Response interceptor
+   * @param res Axios response
    */
-  responseInterceptors?: (res: AxiosResponse<any>) => AxiosResponse<any>;
+  responseInterceptors?: <T = any>(res: AxiosResponse<T>) => AxiosResponse<T>;
 
   /**
-   * @description: 请求之前的拦截器错误处理
+   * Request interceptor error handler
+   * @param error Error object
    */
   requestInterceptorsCatch?: (error: Error) => void;
 
   /**
-   * @description: 请求之后的拦截器错误处理
+   * Response interceptor error handler
+   * @param error Error object
    */
   responseInterceptorsCatch?: (error: Error) => void;
 }

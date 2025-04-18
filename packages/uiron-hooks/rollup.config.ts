@@ -1,6 +1,10 @@
-import { packages } from '../../meta/packages'
 import { createRollupConfig } from '../../rollup.config'
 
 export default createRollupConfig(
-  packages.find(pkg => pkg.name === 'components')!,
+  {
+    name: 'components',
+    display: 'Components',
+    description: 'Renderless components for VueUse',
+    author: 'Jacob Clevenger<https://github.com/wheatjs>',
+  }
 )

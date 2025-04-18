@@ -7,61 +7,59 @@ import type { RequestOptions, Result } from '../types/axios';
 import type { AxiosTransform, CreateAxiosOptions } from './axiosTransform';
 import { ContentTypeEnum, RequestEnum } from '../constants';
 import { ElMessage } from 'element-plus';
-import { useErrorLogStoreWithOut } from '@/store/modules/errorLog';
-import { deepMerge, deepTrim, setObjToUrlParams } from '@/utils';
-import { getToken } from '@/utils/auth';
-import { isString } from '@/utils/is';
 import axios from 'axios';
-import NProgress from 'nprogress';
 import { VAxios } from './Axios';
 import { checkStatus } from './checkStatus';
 import { joinTimestamp } from './helper';
-const { VITE_GLOB_API_URL,VITE_GLOB_API_URL_PREFIX } = import.meta.env;
+import { dealWhiteList, deepMerge, isString } from './utils';
 
 /**
- * @description: 数据处理，方便区分多种处理方式
+ * @description: Data processing utilities for various request handling scenarios
  */
 const transform: AxiosTransform = {
   /**
-   * @description: 处理请求数据。如果数据不是预期格式，可直接抛出错误
+   * @description: Process response data. If the data format is not as expected, it will throw an error
    */
   transformRequestHook: (res: AxiosResponse<Result>, options: RequestOptions) => {
-    const { isTransformResponse, isReturnNativeResponse } = options;
+    const { isReturnNativeResponse, isTransformResponse = true } = options;
 
-    // 是否返回原生响应头 比如：需要获取响应头时使用该属性
+    // Return native response if specified (e.g., when headers are needed)
     if (isReturnNativeResponse) {
-      closeLoading();
       return res;
     }
-    // 不进行任何处理，直接返回
-    // 用于页面代码可能需要直接获取code，data，message这些信息时开启
+    
+    // Skip transformation if specified
     if (!isTransformResponse) {
-      closeLoading();
       return res.data;
     }
-
-    // 错误的时候返回
+    
     const { data } = res;
-    // if (!data && data !== 0) {
-    //   ElError('[HTTP] Request has no return value');
-    //   throw new Error('request error');
-    // }
-
-    closeLoading();
-    return data;
+    
+    // Handle null/undefined data
+    if (!data) {
+      return null;
+    }
+    
+    // Support multiple response data structures
+    return data.result || data.data || data;
   },
 
-  // 请求之前处理config
+  /**
+   * @description: Process request configuration before making the request
+   */
   beforeRequestHook: (config, options) => {
-    const { apiUrl, joinPrefix, joinTime = true } = options;
-
-    if (joinPrefix) {
-      config.url = `${VITE_GLOB_API_URL_PREFIX}${config.url}`;
+    const { apiUrl, joinPrefix, urlPrefix, joinTime = true, joinParamsToUrl } = options;
+    
+    // Handle URL prefixes
+    if (joinPrefix && urlPrefix) {
+      config.url = `${urlPrefix}${config.url}`;
     }
 
     if (apiUrl && isString(apiUrl)) {
-      config.url = `${VITE_GLOB_API_URL}${config.url}`;
+      config.url = `${apiUrl}${config.url}`;
     }
+    
+    // Process parameters based on request method
     let params = config.params || config.data || {};
     // formatDate && data && !isString(data) && formatRequestDate(data);
     if (config.method?.toUpperCase() === RequestEnum.GET) {
@@ -69,78 +67,70 @@ const transform: AxiosTransform = {
       config.data = params;
       config.params = undefined;
     }
+    
     return config;
   },
 
   /**
-   * @description: 请求拦截器处理,添加请求token,appId等
+   * @description: Request interceptor - handles authentication, tokens, app IDs
    */
   requestInterceptors: (config, options) => {
-    if ((config as Recordable)?.withLoading !== false) {
-      openLoading();
+    const {whiteList = [], setToken = '', appId } = options?.requestOptions || {};
+    // 处理白名单
+    if(!dealWhiteList(whiteList, config.url)) {
+      const config1 = setToken && setToken(config);
+      return config1;
     }
-    const token = getToken();
-    config.headers.Authorization = token;
-    config.headers['Xi-App-Id'] = options.appId;
+    if(appId) {
+      config.headers['Xi-App-Id'] = appId;
+    }
+    
     return config;
   },
 
   /**
-   * @description: 响应拦截器处理,响应成功的拦截处理
+   * @description: Response interceptor processing - handle successful responses
    */
   responseInterceptors: (res: AxiosResponse<any>) => {
-    if (res?.data instanceof Blob) {
-      console.log(res, 'res');
-    }
-    NProgress.done();
     return res;
   },
 
   /**
-   * @description: 响应错误处理
+   * @description: Response error handling - process error responses
    */
   responseInterceptorsCatch: (error: any) => {
-    const errorLogStore = useErrorLogStoreWithOut();
-    errorLogStore.addAjaxErrorInfo(error);
-    console.log('error: ', error.msg);
     const { response, message } = error || {};
+  
     checkStatus(response, message);
-    if (!response && error.message === 'timeout of 30000ms exceeded') {
-      new ElError('服务器响应超时');
-    }
     if (axios.isCancel(error)) {
-      new ElError('请求已取消');
+      ElMessage.error('请求已取消');
     } else if (!response) {
-      new ElError(error.message);
+      return Promise.reject(new Error('Network error, please check your connection'));
     }
-    closeLoading();
+    
     return Promise.reject(error);
   },
 };
 
-function createAxios(opt?: Partial<CreateAxiosOptions>) {
+/**
+ * Create an axios instance with custom configuration
+ * @param opt Additional axios options to override defaults
+ * @returns VAxios instance
+ */
+export default function createAxios(opt?: Partial<CreateAxiosOptions>) {
   return new VAxios(
     deepMerge(
       {
-        // See https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication#authentication_schemes
-        // authentication schemes，e.g: Bearer
-        // authenticationScheme: 'Bearer',
-        authenticationScheme: '',
-        appId: globSetting.appId,
+       
         // 接口超时时间，服务器超过下面时间没响应会报错
         timeout: 30 * 1000,
-        // 基础接口地址
-        // baseURL: globSetting.apiUrl,
-        // 接口可能会有通用的地址部分，可以统一抽取出来
-        urlPrefix,
         headers: { 'Content-Type': ContentTypeEnum.JSON },
-        // 如果是form-data格式
-        // headers: { 'Content-Type': ContentTypeEnum.FORM_URLENCODED },
         // 数据处理方式
         transform,
         // 配置项，下面的选项都可以在独立的接口请求中覆盖
         requestOptions: {
-          // 默认将prefix 添加到url
+          appId: '',
+          whiteList: [],
           joinPrefix: true,
           // 是否返回原生响应头 比如：需要获取响应头时使用该属性
           isReturnNativeResponse: false,
@@ -150,21 +140,24 @@ function createAxios(opt?: Partial<CreateAxiosOptions>) {
           joinParamsToUrl: false,
           // 格式化提交参数时间
           formatDate: true,
-          // 消息提示类型
-          errorMessageMode: 'message',
-          // 接口地址
-          apiUrl: globSetting.apiUrl,
           //  是否加入时间戳
           joinTime: false,
+          // 接口前缀
+          urlPrefix:'',
+          // 接口地址
+          apiUrl: '',
           // 忽略重复请求
           ignoreCancelToken: true,
-          // 是否携带token
-          withToken: true,
         },
+        reponseOptions: {
+          catchError: true,
+          addError: () => {
+
+          }
+        }
       },
       opt || {},
     ),
   );
 }
-export const defHttp = createAxios();
-export const CancelToken = axios.CancelToken;
+

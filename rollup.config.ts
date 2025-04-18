@@ -1,24 +1,12 @@
-import type { PackageIndexes, PackageManifest } from './meta';
+import type { PackageManifest } from './meta';
 import type { OutputOptions, RollupOptions } from 'rollup';
 import type { Options as ESBuildOptions } from 'rollup-plugin-esbuild';
-import fs from 'node:fs';
-import json from '@rollup/plugin-json';
 import dts from 'rollup-plugin-dts';
 import esbuild from 'rollup-plugin-esbuild';
-import { PluginPure as pure } from 'rollup-plugin-pure';
 import { globSync } from 'tinyglobby';
-
-const metadata = JSON.parse(fs.readFileSync(new URL('./packages/metadata/index.json', import.meta.url), 'utf-8'));
-const functions = metadata.functions as PackageIndexes['functions'];
-
+import typescript from '@rollup/plugin-typescript';
 const configs: RollupOptions[] = [];
-
-const pluginEsbuild = esbuild();
 const pluginDts = dts();
-const pluginPure = pure({
-  functions: ['defineComponent'],
-});
-
 function esbuildMinifier(options: ESBuildOptions) {
   const { renderChunk } = esbuild(options);
 
@@ -49,15 +37,12 @@ export function createRollupConfig(pkg: PackageManifest, cwd = process.cwd()) {
   }
 
   for (const fn of functionNames) {
-    const input = fn === 'index' ? `index.ts` : `${fn}/index.ts`;
-
-    const info = functions.find((i) => i.name === fn);
-
+    const input = fn === 'index' ? `index.ts` : `dist/${fn}/index.ts`;
     const output: OutputOptions[] = [];
 
     if (mjs !== false) {
       output.push({
-        file: `${fn}.mjs`,
+        file: `dist/${fn}.mjs`,
         format: 'es',
       });
     }
@@ -65,7 +50,7 @@ export function createRollupConfig(pkg: PackageManifest, cwd = process.cwd()) {
     if (iife !== false) {
       output.push(
         {
-          file: `${fn}.iife.js`,
+          file: `dist/${fn}.iife.js`,
           format: 'iife',
           name: iifeName,
           extend: true,
@@ -73,7 +58,7 @@ export function createRollupConfig(pkg: PackageManifest, cwd = process.cwd()) {
           plugins: [],
         },
         {
-          file: `${fn}.iife.min.js`,
+          file: `dist/${fn}.iife.min.js`,
           format: 'iife',
           name: iifeName,
           extend: true,
@@ -90,35 +75,14 @@ export function createRollupConfig(pkg: PackageManifest, cwd = process.cwd()) {
     configs.push({
       input,
       output,
-      plugins: [target ? esbuild({ target }) : pluginEsbuild, json(), pluginPure],
-      external: [...externals, ...(external || [])],
+      plugins: [typescript()],
+      //external: [...externals, ...(external || [])],
     });
 
     if (dts !== false) {
       configs.push({
         input,
-        output: [{ file: `${fn}.d.mts` }],
-        plugins: [pluginDts],
-        external: [...externals, ...(external || [])],
-      });
-    }
-
-    if (info?.component) {
-      configs.push({
-        input: `${fn}/component.ts`,
-        output: [
-          {
-            file: `${fn}/component.mjs`,
-            format: 'es',
-          },
-        ],
-        plugins: [pluginEsbuild, pluginPure],
-        external: [...externals, ...(external || [])],
-      });
-
-      configs.push({
-        input: `${fn}/component.ts`,
-        output: [{ file: `${fn}/component.d.mts` }],
+        output: [{ file: `dist/${fn}.d.mts` }],
         plugins: [pluginDts],
         external: [...externals, ...(external || [])],
       });

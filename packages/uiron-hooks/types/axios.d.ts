@@ -2,6 +2,7 @@
 export type ErrorMessageMode = 'none' | 'modal' | 'message' | 'notify' | undefined;
 
 export interface RequestOptions {
+  appId: string;
   // Splicing request parameters to url
   joinParamsToUrl?: boolean;
   // Format request parameter time
@@ -20,21 +21,23 @@ export interface RequestOptions {
   // Whether to add a timestamp
   joinTime?: boolean;
   ignoreCancelToken?: boolean;
-  // Whether to send token in header
-  withToken?: boolean;
+  whiteList?: string[];
+  setToken?: (config: any) =>any;
+  urlPrefix?: string;
 }
 
 export interface Result<T = any> {
   code: number;
   type: 'success' | 'error' | 'warning';
   message: string;
-  result: T;
+  result?: T;
+  data?:T
 }
 
 // multipart/form-data: upload file
 export interface UploadFileParams {
   // Other parameters
-  data?: Recordable;
+  data?: any;
   // File parameter interface field name
   name?: string;
   // file name

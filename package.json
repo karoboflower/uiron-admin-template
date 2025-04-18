@@ -34,6 +34,7 @@
     "rollup-plugin-pure": "catalog:dev",
     "@rollup/plugin-json": "catalog:dev",
     "@rollup/plugin-replace": "catalog:dev",
+    "@rollup/plugin-typescript": "^11.1.6",
     "tinyglobby": "catalog:dev"
   },
   "dependencies": {

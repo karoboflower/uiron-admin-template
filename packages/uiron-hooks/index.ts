@@ -1,1 +1,1 @@
-export * from './use-requests'
+export { default as uironRequest }  from './use-requests/index';
