@@ -1,7 +1,17 @@
 {
   "name": "@uiron/hooks",
-  "version": "0.0.2",
-  "description": "",
+  "version": "0.0.3-beta.1",
+  "homepage": "https://github.com/karoboflower/uiron-admin",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "bugs": "https://github.com/karoboflower/uiron-admin/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/karoboflower/uiron-admin.git",
+    "directory": "internal/lint-configs"
+  },
   "exports": {
     ".": "./dist/index.mjs",
     "./*": "./dist/*"
