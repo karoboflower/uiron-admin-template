@@ -1,13 +1,13 @@
 {
   "name": "@uiron/hooks",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "exports": {
-    ".": "./index.mjs",
-    "./*": "./*"
+    ".": "./dist/index.mjs",
+    "./*": "./dist/*"
   },
-  "main": "./index.mjs",
-  "module": "./index.mjs",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -15,12 +15,13 @@
   "scripts": {
     "build": "rollup --config=rollup.config.ts --configPlugin=rollup-plugin-esbuild",
     "prepack": "pnpm run build",
-    "test:attw": "attw --pack --config-path ../../.attw.json ."
+    "test:attw": "attw --pack --config-path ../../.attw.json .",
+    "release": "bumpp"
   },
   "peerDependencies": {
-    "vue": "catalog:peer",
-    "axios": "catalog:peer",
-    "element-plus": "catalog:peer",
-    "qs": "catalog:peer"
+    "axios": "catalog:peer"
+  },
+  "devDependencies": {
+    "bumpp": "^10.0.3"
   }
 }
