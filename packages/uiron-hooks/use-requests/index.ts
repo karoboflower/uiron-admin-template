@@ -11,7 +11,7 @@ import axios from 'axios';
 import { VAxios } from './Axios';
 import { checkStatus } from './checkStatus';
 import { joinTimestamp } from './helper';
-import { dealWhiteList, deepMerge, isString, isFunction } from './utils';
+import { dealWhiteList, deepMerge, isString, isFunction, joinBaseUrl } from './utils';
 
 /**
  * @description: Data processing utilities for various request handling scenarios
@@ -51,23 +51,26 @@ const transform: AxiosTransform = {
     const { apiUrl, joinPrefix, urlPrefix, joinTime = true } = options;
     
     // Handle URL prefixes
-    if (joinPrefix && urlPrefix) {
+    if (joinPrefix && isString(urlPrefix)) {
       config.url = `${urlPrefix}${config.url}`;
     }
 
     if (apiUrl && isString(apiUrl)) {
       config.url = `${apiUrl}${config.url}`;
     }
+    config.url = joinBaseUrl(joinPrefix,urlPrefix,apiUrl,config.url);
     
     // Process parameters based on request method
     let params = config.params || config.data || {};
     // formatDate && data && !isString(data) && formatRequestDate(data);
     if (config.method?.toUpperCase() === RequestEnum.GET) {
       params = Object.assign(params || {}, joinTimestamp(joinTime, false));
+      config.params = params;
+      config.data = undefined;
+    } else {
       config.data = params;
       config.params = undefined;
     }
-    
     return config;
   },
 
@@ -81,6 +84,7 @@ const transform: AxiosTransform = {
       const config1 = setToken && setToken(config);
       return config1;
     }
+    
     if(appId) {
       config.headers['Xi-App-Id'] = appId;
     }

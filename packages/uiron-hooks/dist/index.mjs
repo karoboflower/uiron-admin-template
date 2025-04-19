@@ -84,6 +84,18 @@ function isString(val) {
 function isFunction(val) {
     return typeof val === 'function';
 }
+function joinBaseUrl(joinPrefix, urlPrefix, apiUrl, url) {
+    if ((url === null || url === void 0 ? void 0 : url.startsWith('http://')) || (url === null || url === void 0 ? void 0 : url.startsWith('https://'))) {
+        return url;
+    }
+    if (joinPrefix && isString(urlPrefix)) {
+        return "".concat(urlPrefix).concat(url);
+    }
+    if (apiUrl && isString(apiUrl)) {
+        return "".concat(apiUrl).concat(url);
+    }
+    return url;
+}
 
 // Used to store the identification and cancellation function of each request
 var pendingMap = new Map();
@@ -388,17 +400,22 @@ var transform = {
         var _a;
         var apiUrl = options.apiUrl, joinPrefix = options.joinPrefix, urlPrefix = options.urlPrefix, _b = options.joinTime, joinTime = _b === void 0 ? true : _b;
         // Handle URL prefixes
-        if (joinPrefix && urlPrefix) {
+        if (joinPrefix && isString(urlPrefix)) {
             config.url = "".concat(urlPrefix).concat(config.url);
         }
         if (apiUrl && isString(apiUrl)) {
             config.url = "".concat(apiUrl).concat(config.url);
         }
+        config.url = joinBaseUrl(joinPrefix, urlPrefix, apiUrl, config.url);
         // Process parameters based on request method
         var params = config.params || config.data || {};
         // formatDate && data && !isString(data) && formatRequestDate(data);
         if (((_a = config.method) === null || _a === void 0 ? void 0 : _a.toUpperCase()) === RequestEnum.GET) {
             params = Object.assign(params || {}, joinTimestamp(joinTime, false));
+            config.params = params;
+            config.data = undefined;
+        }
+        else {
             config.data = params;
             config.params = undefined;
         }

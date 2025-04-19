@@ -22,3 +22,16 @@ export function isString(val: unknown): val is string {
 export function isFunction(val: unknown): val is Function {
   return typeof val === 'function';
 }
+type StringUndefinedType = string| undefined;
+export function joinBaseUrl(joinPrefix: boolean| undefined, urlPrefix: StringUndefinedType, apiUrl: StringUndefinedType, url: StringUndefinedType) {
+  if (url?.startsWith('http://') || url?.startsWith('https://')) {
+    return url;
+  }
+  if (joinPrefix && isString(urlPrefix)) {
+    return `${urlPrefix}${url}`;
+  }
+  if (apiUrl && isString(apiUrl)) {
+    return `${apiUrl}${url}`;
+  }
+  return url;
+}
