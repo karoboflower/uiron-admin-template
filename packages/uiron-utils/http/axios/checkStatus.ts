@@ -1,7 +1,7 @@
 /* eslint-disable no-new */
 import { error as ElError } from '@/hooks/elementPlus/useMessage';
-import { clearAuthCache } from '@/utils/auth';
-import { sleep } from '@/utils/tools';
+import { clearAuthCache } from './auth';
+import { sleep } from './tools';
 /**
  * @description: 校验错误网络请求状态码
  * @param {number} response

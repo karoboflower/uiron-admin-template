@@ -1,15 +1,15 @@
 {
   "name": "@uiron/hooks",
-  "version": "0.0.3-beta.6",
-  "homepage": "https://github.com/karoboflower/uiron-admin",
+  "version": "0.0.3-beta.7",
+  "homepage": "https://github.com/karoboflower/uiron-admin-template",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
-  "bugs": "https://github.com/karoboflower/uiron-admin/issues",
+  "bugs": "https://github.com/karoboflower/uiron-admin-template/issues",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/karoboflower/uiron-admin.git",
+    "url": "git+https://github.com/karoboflower/uiron-admin-template.git",
     "directory": "internal/lint-configs"
   },
   "exports": {

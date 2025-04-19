@@ -83,7 +83,7 @@ export class VAxios {
     if (!transform) {
       return;
     }
-    
+
     const {
       requestInterceptors,
       requestInterceptorsCatch,
@@ -92,8 +92,19 @@ export class VAxios {
     } = transform;
     const axiosCanceler = new AxiosCanceler();
     // Request interceptor configuration processing
-    this.axiosInstance.interceptors.request.use((config: AxiosRequestConfig) => {
+    this.axiosInstance.interceptors.request.use((config: CreateAxiosOptions) => {
+      const {
+        headers: { ignoreCancelToken },
+      } = config;
       // If cancel repeat request is turned on, then cancel repeat request is prohibited
+      const ignoreCancel =
+      ignoreCancelToken !== undefined
+        ? ignoreCancelToken
+        : config?.requestOptions?.ignoreCancelToken !== undefined
+        ? config?.requestOptions?.ignoreCancelToken
+        : this.options.requestOptions?.ignoreCancelToken;
+
+    !ignoreCancel && axiosCanceler.addPending(config);
         if (requestInterceptors && isFunction(requestInterceptors)) {
           config = requestInterceptors(config, this.options);
         }

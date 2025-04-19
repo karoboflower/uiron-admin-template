@@ -210,7 +210,15 @@ var VAxios = /** @class */ (function () {
         var axiosCanceler = new AxiosCanceler();
         // Request interceptor configuration processing
         this.axiosInstance.interceptors.request.use(function (config) {
+            var _a, _b, _c;
+            var ignoreCancelToken = config.headers.ignoreCancelToken;
             // If cancel repeat request is turned on, then cancel repeat request is prohibited
+            var ignoreCancel = ignoreCancelToken !== undefined
+                ? ignoreCancelToken
+                : ((_a = config === null || config === void 0 ? void 0 : config.requestOptions) === null || _a === void 0 ? void 0 : _a.ignoreCancelToken) !== undefined
+                    ? (_b = config === null || config === void 0 ? void 0 : config.requestOptions) === null || _b === void 0 ? void 0 : _b.ignoreCancelToken
+                    : (_c = _this.options.requestOptions) === null || _c === void 0 ? void 0 : _c.ignoreCancelToken;
+            !ignoreCancel && axiosCanceler.addPending(config);
             if (requestInterceptors && isFunction(requestInterceptors)) {
                 config = requestInterceptors(config, _this.options);
             }

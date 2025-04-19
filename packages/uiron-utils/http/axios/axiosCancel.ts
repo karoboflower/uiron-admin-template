@@ -1,5 +1,5 @@
 import type { AxiosRequestConfig, Canceler } from 'axios';
-import { isFunction } from '@/utils/is';
+import { isFunction } from './is';
 import axios from 'axios';
 
 // Used to store the identification and cancellation function of each request
