@@ -1,6 +1,6 @@
 {
   "name": "@uiron/hooks",
-  "version": "0.0.3-beta.7",
+  "version": "0.0.3-beta.8",
   "homepage": "https://github.com/karoboflower/uiron-admin-template",
   "publishConfig": {
     "access": "public",
