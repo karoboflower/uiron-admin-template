@@ -52,6 +52,12 @@ catalogs:
     axios:
       specifier: ^0.21.1
       version: 0.21.4
+    big.js:
+      specifier: ^6.2.1
+      version: 6.2.2
+    dayjs:
+      specifier: ^1.10.6
+      version: 1.11.13
     element-plus:
       specifier: ^2.2.15
       version: 2.9.7
@@ -165,12 +171,12 @@ importers:
 
   packages/uiron-utils:
     dependencies:
-      axios:
+      big.js:
         specifier: catalog:peer
-        version: 0.21.4
-      vue:
+        version: 6.2.2
+      dayjs:
         specifier: catalog:peer
-        version: 3.5.13(typescript@5.8.3)
+        version: 1.11.13
 
 packages:
 
@@ -1100,6 +1106,9 @@ packages:
 
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
+
+  big.js@6.2.2:
+    resolution: {integrity: sha512-y/ie+Faknx7sZA5MfGA2xKlu0GDv8RWrXGsmlteyJQ2lvoKv9GBK/fpRMc2qlSoBAgNxrixICFCBefIq8WCQpQ==}
 
   boolbase@1.0.0:
     resolution: {integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==}
@@ -3928,6 +3937,8 @@ snapshots:
       - debug
 
   balanced-match@1.0.2: {}
+
+  big.js@6.2.2: {}
 
   boolbase@1.0.0: {}
 

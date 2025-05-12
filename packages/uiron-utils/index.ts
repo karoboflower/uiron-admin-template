@@ -55,56 +55,8 @@ export function openWindow(
   window.open(url, target, feature.join(','));
 }
 
-// dynamic use hook props
-export function getDynamicProps<T, U>(props: T): Partial<U> {
-  const ret: Recordable = {};
 
-  // eslint-disable-next-line array-callback-return
-  Object.keys(props).map((key) => {
-    ret[key] = unref((props as Recordable)[key]);
-  });
 
-  return ret as Partial<U>;
-}
-
-export function getRawRoute(route: RouteLocationNormalized): RouteLocationNormalized {
-  if (!route) return route;
-  const { matched, ...opt } = route;
-  return {
-    ...opt,
-    matched: (matched
-      ? matched.map((item) => ({
-          meta: item.meta,
-          name: item.name,
-          path: item.path,
-        }))
-      : undefined) as RouteRecordNormalized[],
-  };
-}
-
-export const withInstall = <T>(component: T, alias?: string) => {
-  const comp = component as any;
-  comp.install = (app: App) => {
-    app.component(comp.name || comp.displayName, component);
-    if (alias) {
-      app.config.globalProperties[alias] = component;
-    }
-  };
-  return component as T & Plugin;
-};
-
-export const exportExcel = (data: Blob, title: string) => {
-  const fileName = title;
-  const dom = document.createElement('a');
-  const url = window.URL.createObjectURL(data);
-  dom.href = url;
-  dom.download = decodeURI(fileName);
-  dom.style.display = 'none';
-  document.body.appendChild(dom);
-  dom.click();
-  dom?.parentNode?.removeChild(dom);
-  window.URL.revokeObjectURL(url);
-};
 
 export const shallowEqual = (objA: any, objB: any) => {
   // 如果两个对象是同一个引用，则相等

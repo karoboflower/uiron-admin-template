@@ -1,5 +1,3 @@
-import { ElMessage } from 'element-plus';
-import { omitBy } from 'lodash-es';
 import { div, mul } from './decimal';
 import { isPositiveInteger } from './pattern';
 
@@ -84,7 +82,7 @@ export function transpose(array: any[]) {
 export function hexToRgb(str: any) {
   let hexs: any = '';
   const reg = /^#?[0-9A-F]{6}$/i;
-  if (!reg.test(str)) return ElMessage.warning('输入错误的hex');
+  if (!reg.test(str)) return false;
   str = str.replace('#', '');
   hexs = str.match(/../g);
   for (let i = 0; i < 3; i++) hexs[i] = Number.parseInt(hexs[i], 16);
@@ -100,7 +98,7 @@ export function hexToRgb(str: any) {
  */
 export function rgbToHex(r: any, g: any, b: any) {
   const reg = /^\d{1,3}$/;
-  if (!reg.test(r) || !reg.test(g) || !reg.test(b)) return ElMessage.warning('输入错误的rgb颜色值');
+  if (!reg.test(r) || !reg.test(g) || !reg.test(b)) return false;
   const hexs = [r.toString(16), g.toString(16), b.toString(16)];
   for (let i = 0; i < 3; i++) {
     if (hexs[i].length === 1) hexs[i] = `0${hexs[i]}`;
@@ -116,7 +114,7 @@ export function rgbToHex(r: any, g: any, b: any) {
  */
 export function getLightColor(color: string, level: number) {
   const reg = /^#?[0-9A-F]{6}$/i;
-  if (!reg.test(color)) return ElMessage.warning('输入错误的hex颜色值');
+  if (!reg.test(color)) return false;
   const rgb = hexToRgb(color);
   for (let i = 0; i < 3; i++) rgb[i] = Math.floor((255 - rgb[i]) * level + rgb[i]);
   return rgbToHex(rgb[0], rgb[1], rgb[2]);
@@ -279,9 +277,4 @@ export const getQueryParams = <T = any>(url: string) => {
   return obj as T;
 };
 
-// 过滤对象中键值为undefined null 或者空字符串的键
-export function omitByValues(obj, values = ['', undefined]) {
-  return omitBy(obj, (item) => {
-    return values.includes(item);
-  });
-}
+

@@ -1,43 +1,10 @@
-import type {
-  APP_ROUTERS_KEY,
-  COPY_SHOP_KEY,
-  COPY_SITE_KEY,
-  MULTIPLE_TABS_KEY,
-  PROJ_CFG_KEY,
-  ROLES_KEY,
-  TABS_CFG_KEY,
-} from '@/enums';
-import type { ProjectConfig } from '@/setting/projectSetting';
-import type { RouteLocationNormalized } from 'vue-router';
-import type { LockInfo, UserInfo } from '../../../types/store';
+
 import { APP_LOCAL_CACHE_KEY, APP_SESSION_CACHE_KEY, LOCK_INFO_KEY, TOKEN_KEY, USER_INFO_KEY } from '@/enums';
 import { DEFAULT_CACHE_TIME } from '@/setting/encryptionSetting';
-import { createLocalStorage, createSessionStorage } from './cache';
+import { createLocalStorage, createSessionStorage } from './index';
 import { omit, pick } from 'lodash-es';
 import { toRaw } from 'vue';
 import { Memory } from './memory';
-
-interface BasicStore {
-  [TOKEN_KEY]: string | number | null | undefined;
-  [USER_INFO_KEY]: UserInfo;
-  [ROLES_KEY]: string[];
-  [LOCK_INFO_KEY]: LockInfo;
-  [PROJ_CFG_KEY]: ProjectConfig;
-  [MULTIPLE_TABS_KEY]: RouteLocationNormalized[];
-  [APP_ROUTERS_KEY]: any[]; // TODO: 路由类型
-  [TABS_CFG_KEY]: any[];
-  [COPY_SHOP_KEY]: string;
-  [COPY_SITE_KEY]: string;
-}
-
-type LocalStore = BasicStore;
-
-type SessionStore = BasicStore;
-
-export type BasicKeys = keyof BasicStore;
-type LocalKeys = keyof LocalStore;
-type SessionKeys = keyof SessionStore;
-
 const ls = createLocalStorage();
 const ss = createSessionStorage();
 

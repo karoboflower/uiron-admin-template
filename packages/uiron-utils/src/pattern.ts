@@ -217,9 +217,6 @@ export class InputValidator {
   // 备注校验：允许所有字符，但是过滤 html 标签，通过 DOMPurify 过滤
   static validateRemark(input: string): ValidationResult {
     const cleanInput = xss(input) || input;
-    console.log(input, 'validateRemark--input');
-    console.log(cleanInput, 'validateRemark--cleanInput');
-
     // debugger;
     if (cleanInput !== input) {
       return { isValid: false, message: '输入不能包含 html 标签' };

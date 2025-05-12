@@ -18,7 +18,7 @@
     "test:attw": "attw --pack --config-path ../../.attw.json ."
   },
   "peerDependencies": {
-    "vue": "catalog:peer",
-    "axios": "catalog:peer"
+    "big.js": "catalog:peer",
+    "dayjs": "catalog:peer"
   }
 }

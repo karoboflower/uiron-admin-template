@@ -27,5 +27,7 @@ catalogs:
     axios: ^0.21.1
     qs: ^6.13.1
     element-plus: ^2.2.15
+    big.js: ^6.2.1
+    dayjs: ^1.10.6
   types:
     '@types/node': ^22.14.0
